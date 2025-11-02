@@ -3,18 +3,25 @@ package accesdades.ra2.ac2.accesdades_ra2_ac2.model;
 import java.time.LocalDateTime;
 
 public class User {
+    // Identificador
     private Long id;
+    // Nom d'usuari
     private String name;
+    // Descripcio de l'usuari
     private String description;
     private String email;
+    // Contrasenya
     private String password;
+    // Últim acces
     private LocalDateTime ultimAcces;
+    // Data de creacio
     private LocalDateTime dataCreated;
+    // Data d'ultima actualitzacio
     private LocalDateTime dataUpdated;
 
     public User() {}
 
-    // Getters y Setters
+    // Getters i setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -39,6 +46,7 @@ public class User {
     public LocalDateTime getDataUpdated() { return dataUpdated; }
     public void setDataUpdated(LocalDateTime dataUpdated) { this.dataUpdated = dataUpdated; }
 
+    // ToString
     @Override
     public String toString() {
         return "User{" +
