@@ -18,10 +18,16 @@ public class User {
     private LocalDateTime dataCreated;
     // Data d'ultima actualitzacio
     private LocalDateTime dataUpdated;
+    //Image Path
+    private String imagePath;
 
     public User() {}
 
     // Getters i setters
+
+    public String getImagePath(){return imagePath; }
+    public void setImagePath(String imagePath){this.imagePath = imagePath; }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     
@@ -52,6 +58,7 @@ public class User {
         return "User{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
+                ", imagePath='" + imagePath + '\'' +
                 ", description='" + description + '\'' +
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +

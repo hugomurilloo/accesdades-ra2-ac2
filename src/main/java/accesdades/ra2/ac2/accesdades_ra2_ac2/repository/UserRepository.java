@@ -23,6 +23,7 @@ public class UserRepository {
         public User mapRow(ResultSet rs, int rowNum) throws SQLException {
             User user = new User();
             user.setId(rs.getLong("id"));
+            user.setImagePath(rs.getString("image_path"));
             user.setName(rs.getString("name"));
             user.setDescription(rs.getString("description"));
             user.setEmail(rs.getString("email"));
@@ -48,20 +49,37 @@ public class UserRepository {
     }
 
     // Crea un nou usuari
-    public String create(User user) {
-        String sql = "INSERT INTO users (name, description, email, password) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(sql,
-        user.getName(),
-        user.getDescription(),
-        user.getEmail(),
-        user.getPassword());
-        return "S’ha inserit l’usuari correctament.";
-    }
+    public User save(User user) {
+            String sql = "INSERT INTO users (name, image_path, description, email, password, ultim_acces, data_created, data_updated) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            
+            jdbcTemplate.update(sql, 
+                user.getName(),
+                user.getImagePath(),
+                user.getDescription(),
+                user.getEmail(),
+                user.getPassword(),
+                user.getUltimAcces(),
+                user.getDataCreated(),
+                user.getDataUpdated()
+            );
+            
+            Long id = jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Long.class);
+            user.setId(id);
+            
+            return user;
+        }
 
     // Retorna tots els usuaris
     public List<User> findAll() {
         String sql = "SELECT * FROM users";
-        return jdbcTemplate.query(sql, new UserRowMapper());
+        try {
+            List<User> users = jdbcTemplate.query(sql, new UserRowMapper());
+            return users;
+        } catch (Exception e) {
+            System.out.println("Error en findAll: " + e.getMessage());
+            return List.of();
+        }
     }
 
     // Troba un usuari per id o retorna null si no existeix
@@ -95,4 +113,13 @@ public class UserRepository {
         int result = jdbcTemplate.update(sql, id);
         return result > 0 ? "Usuari eliminat correctament." : "No s'ha trobat l'usuari.";
     }
+
+    // Puja image a la BDD
+    public boolean updateImagePath(Long id, String imagePath) {
+        String sql = "UPDATE users SET image_path = ?, data_updated = CURRENT_TIMESTAMP WHERE id = ?";
+        int result = jdbcTemplate.update(sql, imagePath, id);
+        return result > 0;
+    }
+
+    
 }
