@@ -1,7 +1,4 @@
 package accesdades.ra2.ac2.accesdades_ra2_ac2.controller;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -90,11 +87,12 @@ public class UserController {
         return userService.insertStudentByCsv(csvFile);
     }
     
+    // Endpoint per crear usuaris d'un fitxer .json (POST /api/users/upload-json)
     @PostMapping("/users/upload-json")
-    public ResponseEntity<String> postMethodName(@RequestParam MultipartFile jsonFile) {
-        
-        return userService.carregaMassiva();
+    public ResponseEntity<String> uploadJson(@RequestParam MultipartFile jsonFile) {
+        return userService.insertUsersFromJson(jsonFile);
     }
+
     
     
 }

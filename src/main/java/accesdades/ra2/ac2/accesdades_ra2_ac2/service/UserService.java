@@ -7,13 +7,11 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
 import accesdades.ra2.ac2.accesdades_ra2_ac2.model.User;
 import accesdades.ra2.ac2.accesdades_ra2_ac2.repository.UserRepository;
 
@@ -133,6 +131,61 @@ public class UserService {
             
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en insertar CSV: " + e.getMessage());
+        }
+    }
+
+    public static class DataWrapper { public Data data; }
+    public static class Data { public int count; public String control; public JsonUser[] users; }
+    public static class JsonUser { public String name; public String description; public String email; public String password; }
+    
+    public ResponseEntity<String> insertUsersFromJson(MultipartFile jsonFile) {
+        // Validar que s'ha enviat el fitxer
+        if (jsonFile == null || jsonFile.isEmpty()) {
+            return ResponseEntity.badRequest().body("El fitxer no pot estar buit");
+        }
+
+        try {
+            // Mapejar el JSON
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            DataWrapper wrapper = mapper.readValue(jsonFile.getInputStream(), DataWrapper.class);
+
+            // Comprovar estructura
+            if (wrapper == null || wrapper.data == null || wrapper.data.users == null) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                        .body("Format JSON incorrecte");
+            }
+
+            // Comprovar control == "OK"
+            if (!"OK".equals(wrapper.data.control) || wrapper.data.count != wrapper.data.users.length) {
+                return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST)
+                        .body("Control o count incorrecte");
+            }
+
+            // Iterar usuaris i guardar-los a la BDD
+            int added = 0;
+            for (JsonUser uj : wrapper.data.users) {
+                User u = new User();
+                u.setName(uj.name);
+                u.setDescription(uj.description);
+                u.setEmail(uj.email);
+                u.setPassword(uj.password);
+                u.setImagePath(null);
+                u.setDataCreated(java.time.LocalDateTime.now());
+                u.setDataUpdated(java.time.LocalDateTime.now());
+
+                if (addUser(u) != null) added++;
+            }
+
+            // Guardar el fitxer JSON a la carpeta "json_processed"
+            Path jsonDir = Paths.get("src/main/resources/public/json_processed");
+            if (!Files.exists(jsonDir)) Files.createDirectories(jsonDir);
+            Path dest = jsonDir.resolve(jsonFile.getOriginalFilename());
+            Files.copy(jsonFile.getInputStream(), dest, StandardCopyOption.REPLACE_EXISTING);
+
+            return ResponseEntity.status(org.springframework.http.HttpStatus.CREATED).body(String.valueOf(added));
+        } catch (Exception e) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error " + e.getMessage());
         }
     }
 }
