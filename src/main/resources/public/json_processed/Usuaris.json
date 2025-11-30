@@ -1,0 +1,26 @@
+{
+  "data": {
+    "count": 3,
+    "control": "OK",
+    "users": [
+      {
+        "name": "Hugo Murillo",
+        "description": "Desarrollador full-stack especializado en APIs REST",
+        "email": "hugo.murillo@email.com",
+        "password": "HugoPass2024!"
+      },
+      {
+        "name": "Eric Parada",
+        "description": "Ingeniero de software con experiencia en microservicios",
+        "email": "eric.parada@email.com",
+        "password": "EricSecure789"
+      },
+      {
+        "name": "Laura Martínez",
+        "description": "Data scientist y machine learning engineer",
+        "email": "laura.martinez@email.com",
+        "password": "LauraML456$"
+      }
+    ]
+  }
+}
