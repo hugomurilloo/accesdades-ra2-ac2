@@ -10,12 +10,16 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import accesdades.ra2.ac2.accesdades_ra2_ac2.model.User;
+import accesdades.ra2.ac2.accesdades_ra2_ac2.logging.CustomLogging;
 
 @Repository
 public class UserRepository {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private CustomLogging customLogging;
 
     // Mapeja el ResultSet
     private static final class UserRowMapper implements RowMapper<User> {
@@ -50,16 +54,23 @@ public class UserRepository {
     // Crea un nou usuari
     public String create(User user) {
         String sql = "INSERT INTO users (name, description, email, password) VALUES (?, ?, ?, ?)";
-        jdbcTemplate.update(sql,
-        user.getName(),
-        user.getDescription(),
-        user.getEmail(),
-        user.getPassword());
-        return "S’ha inserit l’usuari correctament.";
+        try {
+            jdbcTemplate.update(sql,
+            user.getName(),
+            user.getDescription(),
+            user.getEmail(),
+            user.getPassword());
+            customLogging.info("UserRepository", "create", "Create user: " + user.getEmail());
+            return "S'ha inserit l'usuari correctament.";
+        } catch (Exception e) {
+            customLogging.error("UserRepository", "create", "Error create user: " + user.getEmail());
+            return "Error creando usuario.";
+        }
     }
 
     // Retorna tots els usuaris
     public List<User> findAll() {
+        customLogging.info("UserRepository", "findAll", "Get all users");
         String sql = "SELECT * FROM users";
         return jdbcTemplate.query(sql, new UserRowMapper());
     }
@@ -68,7 +79,12 @@ public class UserRepository {
     public User findById(Long id) {
         String sql = "SELECT * FROM users WHERE id = ?";
         List<User> users = jdbcTemplate.query(sql, new UserRowMapper(), id);
-        return users.isEmpty() ? null : users.get(0);
+        if (users.isEmpty()) {
+            customLogging.error("UserRepository", "findById", "User not found: " + id);
+            return null;
+        }
+        customLogging.info("UserRepository", "findById", "User found: " + id);
+        return users.get(0);
     }
     // Actualitza totes les dades d'un usuari i posa data_updated actual
     public String update(Long id, User user) {
@@ -79,20 +95,38 @@ public class UserRepository {
             user.getEmail(),
             user.getPassword(),
             id);
-        return result > 0 ? "Usuari actualitzat correctament." : "No s'ha trobat l'usuari.";
+        if (result > 0) {
+            customLogging.info("UserRepository", "update", "User updated: " + id);
+            return "Usuari actualitzat correctament.";
+        } else {
+            customLogging.error("UserRepository", "update", "User not found for update: " + id);
+            return "No s'ha trobat l'usuari.";
+        }
     }
 
     // Actualitza nomes el nom i la data d'actualitzacio
     public String updateName(Long id, String name) {
         String sql = "UPDATE users SET name = ?, data_updated = CURRENT_TIMESTAMP WHERE id = ?";
         int result = jdbcTemplate.update(sql, name, id);
-        return result > 0 ? "Nom d'usuari actualitzat correctament." : "No s'ha trobat l'usuari.";
+        if (result > 0) {
+            customLogging.info("UserRepository", "updateName", "Name updated for user: " + id);
+            return "Nom d'usuari actualitzat correctament.";
+        } else {
+            customLogging.error("UserRepository", "updateName", "User not found for update: " + id);
+            return "No s'ha trobat l'usuari.";
+        }
     }
 
     // Elimina un usuari per id
     public String delete(Long id) {
         String sql = "DELETE FROM users WHERE id = ?";
         int result = jdbcTemplate.update(sql, id);
-        return result > 0 ? "Usuari eliminat correctament." : "No s'ha trobat l'usuari.";
+        if (result > 0) {
+            customLogging.info("UserRepository", "delete", "User deleted: " + id);
+            return "Usuari eliminat correctament.";
+        } else {
+            customLogging.error("UserRepository", "delete", "User not found for delete: " + id);
+            return "No s'ha trobat l'usuari.";
+        }
     }
 }
